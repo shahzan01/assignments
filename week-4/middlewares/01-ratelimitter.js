@@ -7,7 +7,7 @@ const app = express();
 // rate limit the requests from a user to only 5 request per second
 // If a user sends more than 5 requests in a single second, the server
 // should block them with a 404.
-// User will be sending in their user id in the header as 'user-id'
+// User will be sending in their user id in the header as 'id'
 // You have been given a numberOfRequestsForUser object to start off with which
 // clears every one second
 
@@ -16,6 +16,36 @@ setInterval(() => {
     numberOfRequestsForUser = {};
 }, 1000)
 
+function rateLimiter(req,res,next){
+  let user=req.query.id;
+if(numberOfRequestsForUser[user]<5){next();}
+else{
+  res.status(404).json({msg:"rate limit reached"})
+}
+
+
+}
+
+function requestIncrese(req,res,next){
+let user=req.query.id;
+if(numberOfRequestsForUser[user]){
+  numberOfRequestsForUser[user]++;
+}
+else{
+  numberOfRequestsForUser[user]=1;
+}
+next()
+}
+
+app.use(requestIncrese);
+app.use(rateLimiter);
+
+
+
+
+
+
+
 app.get('/user', function(req, res) {
   res.status(200).json({ name: 'john' });
 });
@@ -23,5 +53,5 @@ app.get('/user', function(req, res) {
 app.post('/user', function(req, res) {
   res.status(200).json({ msg: 'created dummy user' });
 });
-
+app.listen(3000)
 module.exports = app;
